@@ -3,6 +3,7 @@ import { MessageModel } from '../models/Message';
 import { UserModel } from '../models/User';
 import { GroupModel } from '../models/Group';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+import { socketManager } from '../index';
 
 const router = express.Router();
 
@@ -30,6 +31,15 @@ router.post('/direct', authenticateToken, async (req: AuthenticatedRequest, res)
     });
 
     const messageWithUser = await MessageModel.findById(message.id);
+
+    // Broadcast message via socket
+    if (socketManager && messageWithUser) {
+      // Emit to sender
+      socketManager.emitToUser(sender_id, 'new_direct_message', messageWithUser);
+
+      // Emit to recipient if online
+      socketManager.emitToUser(recipient_id, 'new_direct_message', messageWithUser);
+    }
 
     res.status(201).json({
       message: 'Message sent successfully',
@@ -70,6 +80,11 @@ router.post('/group', authenticateToken, async (req: AuthenticatedRequest, res) 
     });
 
     const messageWithUser = await MessageModel.findById(message.id);
+
+    // Broadcast message via socket
+    if (socketManager && messageWithUser) {
+      socketManager.emitToGroup(group_id, 'new_group_message', messageWithUser);
+    }
 
     res.status(201).json({
       message: 'Message sent successfully',

@@ -22,6 +22,7 @@ interface Socket {
     emit: (event: string, data: any) => void;
   };
   emit: (event: string, data: any) => void;
+  on: (event: string, callback: (data: any) => void) => void;
 }
 
 export class SocketManager {

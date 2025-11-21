@@ -68,6 +68,9 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
   });
 });
 
+// Global SocketManager instance
+export let socketManager: SocketManager;
+
 // Initialize database and start server
 async function startServer() {
   try {
@@ -75,7 +78,7 @@ async function startServer() {
     console.log('Database initialized successfully');
 
     // Initialize Socket.io
-    new SocketManager(server);
+    socketManager = new SocketManager(server);
 
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

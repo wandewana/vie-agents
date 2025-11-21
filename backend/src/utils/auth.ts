@@ -20,7 +20,7 @@ export class AuthUtils {
   static generateToken(payload: JwtPayload): string {
     return jwt.sign(payload, process.env.JWT_SECRET!, {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    });
+    } as jwt.SignOptions);
   }
 
   static verifyToken(token: string): JwtPayload {
