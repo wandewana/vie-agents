@@ -23,6 +23,7 @@ export interface Message {
   created_at: string;
   sender_username: string;
   sender_email: string;
+  is_optimistic?: boolean;
 }
 
 export interface Conversation {

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { Message } from '../types';
-import { messagesAPI } from '../utils/api';
 import { Send, Users } from 'lucide-react';
 
 interface ChatWindowProps {
@@ -13,12 +12,14 @@ interface ChatWindowProps {
   };
   messages: Message[];
   onNewMessage: (message: Message) => void;
+  onConversationUpdate?: (message: Message) => void;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
   conversation,
   messages,
   onNewMessage,
+  onConversationUpdate,
 }) => {
   const { user } = useAuth();
   const { socket, sendDirectMessage, sendGroupMessage } = useSocket();
@@ -26,7 +27,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [sending, setSending] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -61,7 +62,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       const handleUserStopTyping = (data: { user_id: number }) => {
         if (data.user_id !== user?.id) {
-          setTypingUsers(prev => prev.filter(username => {
+          setTypingUsers(prev => prev.filter(() => {
             // We don't have the username here, so we'll clear all
             // In a real app, you'd want to track by user_id
             return false;
@@ -85,7 +86,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     setSending(true);
 
+    // Create optimistic message
+    const optimisticMessage: Message = {
+      id: Date.now(), // Temporary ID for optimistic update
+      content: newMessage.trim(),
+      sender_id: user?.id || 0,
+      sender_username: user?.username || '',
+      sender_email: user?.email || '',
+      recipient_id: conversation.type === 'direct' ? conversation.id : undefined,
+      group_id: conversation.type === 'group' ? conversation.id : undefined,
+      created_at: new Date().toISOString(),
+      is_optimistic: true, // Mark as optimistic for potential cleanup
+    };
+
     try {
+      // Add optimistic message to UI immediately
+      onNewMessage(optimisticMessage);
+
+      // Update conversation list optimistically
+      if (onConversationUpdate) {
+        onConversationUpdate(optimisticMessage);
+      }
+
       if (conversation.type === 'direct') {
         sendDirectMessage(conversation.id, newMessage.trim());
       } else {
@@ -105,6 +127,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Optionally remove optimistic message on error
+      // This would require more complex state management
     } finally {
       setSending(false);
     }

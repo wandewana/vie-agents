@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { Message, Conversation, User, Group } from '../types';
-import { messagesAPI, groupsAPI, usersAPI } from '../utils/api';
+import { Message, Conversation, Group } from '../types';
+import { messagesAPI, groupsAPI } from '../utils/api';
 import ConversationList from '../components/ConversationList';
 import ChatWindow from '../components/ChatWindow';
 import GroupManager from '../components/GroupManager';
@@ -36,7 +36,8 @@ const ChatPage: React.FC = () => {
         if (activeConversation?.type === 'direct' && activeConversation.id === message.sender_id) {
           setMessages(prev => [...prev, message]);
         }
-        loadConversations(); // Refresh conversation list
+        // Update conversation list locally instead of API call
+        updateConversationListLocally(message);
       });
 
       // Listen for new group messages
@@ -44,7 +45,8 @@ const ChatPage: React.FC = () => {
         if (activeConversation?.type === 'group' && activeConversation.id === message.group_id) {
           setMessages(prev => [...prev, message]);
         }
-        loadConversations(); // Refresh conversation list
+        // Update conversation list locally instead of API call
+        updateConversationListLocally(message);
       });
 
       return () => {
@@ -72,6 +74,57 @@ const ChatPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to load groups:', error);
     }
+  };
+
+  const updateConversationListLocally = (message: Message) => {
+    setConversations(prev => {
+      const updatedConversations = [...prev];
+
+      if (message.group_id) {
+        // Group message
+        const groupIndex = updatedConversations.findIndex(
+          conv => conv.type === 'group' && conv.other_user_id === message.group_id
+        );
+
+        if (groupIndex !== -1) {
+          updatedConversations[groupIndex] = {
+            ...updatedConversations[groupIndex],
+            last_message_at: message.created_at
+          };
+        }
+      } else if (message.sender_id !== user?.id) {
+        // Direct message from someone else
+        const directIndex = updatedConversations.findIndex(
+          conv => conv.type === 'direct' && conv.other_user_id === message.sender_id
+        );
+
+        if (directIndex !== -1) {
+          updatedConversations[directIndex] = {
+            ...updatedConversations[directIndex],
+            last_message_at: message.created_at
+          };
+        }
+      } else if (message.recipient_id) {
+        // Direct message sent by current user
+        const directIndex = updatedConversations.findIndex(
+          conv => conv.type === 'direct' && conv.other_user_id === message.recipient_id
+        );
+
+        if (directIndex !== -1) {
+          updatedConversations[directIndex] = {
+            ...updatedConversations[directIndex],
+            last_message_at: message.created_at
+          };
+        }
+      }
+
+      return updatedConversations;
+    });
+  };
+
+  const updateConversationOnSend = (message: Message) => {
+    // Update conversation list optimistically when sending
+    updateConversationListLocally(message);
   };
 
   const selectConversation = async (conversation: Conversation) => {
@@ -219,6 +272,7 @@ const ChatPage: React.FC = () => {
             conversation={activeConversation}
             messages={messages}
             onNewMessage={(message) => setMessages(prev => [...prev, message])}
+            onConversationUpdate={updateConversationOnSend}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">

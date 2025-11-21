@@ -40,14 +40,6 @@ const GroupManager: React.FC<GroupManagerProps> = ({
     }
   };
 
-  const handleJoinGroup = async (groupId: number) => {
-    try {
-      await groupsAPI.join(groupId);
-      onGroupsUpdate();
-    } catch (error) {
-      console.error('Failed to join group:', error);
-    }
-  };
 
   const handleLeaveGroup = async (groupId: number) => {
     try {
