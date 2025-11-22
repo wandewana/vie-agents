@@ -125,7 +125,12 @@ try {
     }
 
     # Escape quotes in commit message for git
+    # Git commit messages should be concise (recommended max 72 chars for subject)
     $commitMessage = "Task: $($Prompt -replace '"', '\"')"
+    if ($commitMessage.Length -gt 200) {
+        $commitMessage = $commitMessage.Substring(0, 197) + "..."
+    }
+
     git commit -m "$commitMessage" 2>&1 | Out-String | Write-Host
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to commit changes"
@@ -151,7 +156,15 @@ try {
 
     # Escape quotes in prompt for PR title/body
     $escapedPrompt = $Prompt -replace '"', '\"'
+
+    # GitHub PR title limit is 256 characters
+    # Truncate if needed and add ellipsis
     $prTitle = "Task: $escapedPrompt"
+    if ($prTitle.Length -gt 256) {
+        $prTitle = $prTitle.Substring(0, 253) + "..."
+    }
+
+    # Full prompt goes in the body
     $prBody = "Automated task executed by agent`n`nPrompt: $escapedPrompt"
 
     # Use argument array to properly handle spaces and special characters
