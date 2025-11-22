@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { messagesAPI } from '../utils/api';
@@ -10,15 +10,9 @@ const MessageMonitor: React.FC = () => {
   const { socket } = useSocket();
   const [monitoredMessages, setMonitoredMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [monitoredMessages]);
+  // Removed automatic scroll behavior for monitoring dashboard
+  // Users can manually scroll to see new messages
 
   useEffect(() => {
     const loadAllMessages = async () => {
@@ -174,7 +168,6 @@ const MessageMonitor: React.FC = () => {
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
