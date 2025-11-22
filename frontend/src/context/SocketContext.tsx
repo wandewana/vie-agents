@@ -69,25 +69,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
   };
 
-  const sendDirectMessage = (recipientId: number, content: string) => {
-    if (socket) {
-      socket.emit('send_direct_message', { recipient_id: recipientId, content });
-    }
-  };
-
-  const sendGroupMessage = (groupId: number, content: string) => {
-    if (socket) {
-      socket.emit('send_group_message', { group_id: groupId, content });
-    }
-  };
-
   const value: SocketContextType = {
     socket,
     isConnected,
     joinGroup,
     leaveGroup,
-    sendDirectMessage,
-    sendGroupMessage,
   };
 
   return (

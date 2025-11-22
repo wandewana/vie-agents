@@ -72,78 +72,7 @@ export class SocketManager {
         socket.join(`user_${socket.user.userId}`);
       }
 
-      // Handle direct message
-      socket.on('send_direct_message', async (data) => {
-        try {
-          const { recipient_id, content } = data;
-          const sender_id = socket.user!.userId;
 
-          if (!recipient_id || !content) {
-            socket.emit('error', { message: 'Recipient ID and content are required' });
-            return;
-          }
-
-          // Create message in database
-          const message = await MessageModel.create({
-            content,
-            sender_id,
-            recipient_id,
-          });
-
-          const messageWithUser = await MessageModel.findById(message.id);
-
-          // Emit to sender
-          socket.emit('new_direct_message', messageWithUser);
-
-          // Emit to recipient if online
-          const recipientSocketId = this.userSockets.get(recipient_id);
-          if (recipientSocketId) {
-            this.io.to(recipientSocketId).emit('new_direct_message', messageWithUser);
-          }
-
-          console.log(`Direct message sent from ${socket.user?.username} to user ${recipient_id}`);
-        } catch (error) {
-          console.error('Send direct message error:', error);
-          socket.emit('error', { message: 'Failed to send message' });
-        }
-      });
-
-      // Handle group message
-      socket.on('send_group_message', async (data) => {
-        try {
-          const { group_id, content } = data;
-          const sender_id = socket.user!.userId;
-
-          if (!group_id || !content) {
-            socket.emit('error', { message: 'Group ID and content are required' });
-            return;
-          }
-
-          // Verify user is member of group
-          const isMember = await GroupModel.isMember(group_id, sender_id);
-          if (!isMember) {
-            socket.emit('error', { message: 'You are not a member of this group' });
-            return;
-          }
-
-          // Create message in database
-          const message = await MessageModel.create({
-            content,
-            sender_id,
-            group_id,
-          });
-
-          const messageWithUser = await MessageModel.findById(message.id);
-
-          // Emit to all group members
-          this.io.to(`group_${group_id}`).emit('new_group_message', messageWithUser);
-
-          console.log(`Group message sent to group ${group_id} by ${socket.user?.username}`);
-        } catch (error) {
-          console.error('Send group message error:', error);
-          socket.emit('error', { message: 'Failed to send message' });
-        }
-      });
 
       // Join group room
       socket.on('join_group', (data) => {

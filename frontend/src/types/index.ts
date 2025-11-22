@@ -48,6 +48,4 @@ export interface SocketContextType {
   isConnected: boolean;
   joinGroup: (groupId: number) => void;
   leaveGroup: (groupId: number) => void;
-  sendDirectMessage: (recipientId: number, content: string) => void;
-  sendGroupMessage: (groupId: number, content: string) => void;
 }

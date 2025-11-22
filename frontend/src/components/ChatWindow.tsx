@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { messagesAPI } from '../utils/api';
 import { Message } from '../types';
 import { Send, Users } from 'lucide-react';
 
@@ -22,7 +23,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onConversationUpdate,
 }) => {
   const { user } = useAuth();
-  const { socket, sendDirectMessage, sendGroupMessage } = useSocket();
+  const { socket } = useSocket();
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -109,9 +110,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
 
       if (conversation.type === 'direct') {
-        sendDirectMessage(conversation.id, newMessage.trim());
+        await messagesAPI.sendDirect(conversation.id, newMessage.trim());
       } else {
-        sendGroupMessage(conversation.id, newMessage.trim());
+        await messagesAPI.sendGroup(conversation.id, newMessage.trim());
       }
 
       // Clear typing indicator
