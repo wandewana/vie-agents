@@ -31,6 +31,7 @@ router.post('/direct', authenticateToken, async (req: AuthenticatedRequest, res)
     });
 
     const messageWithUser = await MessageModel.findById(message.id);
+    const messageWithDetails = await MessageModel.findByIdWithDetails(message.id);
 
     // Broadcast message via socket
     if (socketManager && messageWithUser) {
@@ -39,6 +40,11 @@ router.post('/direct', authenticateToken, async (req: AuthenticatedRequest, res)
 
       // Emit to recipient if online
       socketManager.emitToUser(recipient_id, 'new_direct_message', messageWithUser);
+
+      // Broadcast to superadmin for monitoring with full details
+      if (messageWithDetails) {
+        socketManager.broadcastToSuperadmin(messageWithDetails);
+      }
     }
 
     res.status(201).json({
@@ -80,10 +86,16 @@ router.post('/group', authenticateToken, async (req: AuthenticatedRequest, res) 
     });
 
     const messageWithUser = await MessageModel.findById(message.id);
+    const messageWithDetails = await MessageModel.findByIdWithDetails(message.id);
 
     // Broadcast message via socket
     if (socketManager && messageWithUser) {
       socketManager.emitToGroup(group_id, 'new_group_message', messageWithUser);
+
+      // Broadcast to superadmin for monitoring with full details
+      if (messageWithDetails) {
+        socketManager.broadcastToSuperadmin(messageWithDetails);
+      }
     }
 
     res.status(201).json({
@@ -168,6 +180,25 @@ router.get('/conversations', authenticateToken, async (req: AuthenticatedRequest
     res.json({ conversations });
   } catch (error) {
     console.error('Get conversations error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all messages (superadmin only)
+router.get('/all', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  try {
+    // Check if user is superadmin
+    const user = await UserModel.findById(req.user!.userId);
+    if (!user || user.username !== 'superadmin') {
+      return res.status(403).json({ error: 'Access denied. Superadmin only.' });
+    }
+
+    const limit = parseInt(req.query.limit as string) || 100;
+    const messages = await MessageModel.getAllMessages(limit);
+
+    res.json({ messages });
+  } catch (error) {
+    console.error('Get all messages error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

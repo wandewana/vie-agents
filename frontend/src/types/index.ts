@@ -24,6 +24,8 @@ export interface Message {
   sender_username: string;
   sender_email: string;
   is_optimistic?: boolean;
+  group_name?: string;
+  recipient_username?: string;
 }
 
 export interface Conversation {

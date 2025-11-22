@@ -7,13 +7,14 @@ import ConversationList from '../components/ConversationList';
 import ChatWindow from '../components/ChatWindow';
 import GroupManager from '../components/GroupManager';
 import UserSearch from '../components/UserSearch';
-import { LogOut, MessageCircle, Users, Search } from 'lucide-react';
+import MessageMonitor from '../components/MessageMonitor';
+import { LogOut, MessageCircle, Users, Search, Eye } from 'lucide-react';
 
 const ChatPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { socket, isConnected } = useSocket();
 
-  const [activeTab, setActiveTab] = useState<'chats' | 'groups' | 'search'>('chats');
+  const [activeTab, setActiveTab] = useState<'chats' | 'groups' | 'search' | 'monitor'>('chats');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<{
     type: 'direct' | 'group';
@@ -222,6 +223,19 @@ const ChatPage: React.FC = () => {
               <Search size={16} />
               Search
             </button>
+            {user?.username === 'superadmin' && (
+              <button
+                onClick={() => setActiveTab('monitor')}
+                className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
+                  activeTab === 'monitor'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Eye size={16} />
+                Monitor
+              </button>
+            )}
           </div>
         </div>
 
@@ -262,12 +276,22 @@ const ChatPage: React.FC = () => {
               });
             }} />
           )}
+          {activeTab === 'monitor' && (
+            <div className="p-4 text-center">
+              <Eye size={32} className="mx-auto text-purple-600 mb-2" />
+              <p className="text-sm text-gray-600">
+                Click "Monitor" tab to view all messages
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col">
-        {activeConversation ? (
+        {activeTab === 'monitor' ? (
+          <MessageMonitor />
+        ) : activeConversation ? (
           <ChatWindow
             conversation={activeConversation}
             messages={messages}

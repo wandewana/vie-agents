@@ -64,6 +64,11 @@ export const messagesAPI = {
     const response = await api.get('/messages/conversations');
     return response.data;
   },
+
+  getAllMessages: async (limit = 100): Promise<{ messages: Message[] }> => {
+    const response = await api.get(`/messages/all?limit=${limit}`);
+    return response.data;
+  },
 };
 
 // Groups API

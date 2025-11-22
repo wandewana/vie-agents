@@ -19,6 +19,8 @@ export interface CreateMessageData {
 export interface MessageWithUser extends Message {
   sender_username: string;
   sender_email: string;
+  group_name?: string;
+  recipient_username?: string;
 }
 
 export class MessageModel {
@@ -113,5 +115,36 @@ export class MessageModel {
     );
 
     return [...dmResult.rows, ...groupResult.rows];
+  }
+
+  static async getAllMessages(limit = 100): Promise<MessageWithUser[]> {
+    const result = await pool.query(
+      `SELECT m.*, u.username as sender_username, u.email as sender_email,
+              g.name as group_name,
+              ru.username as recipient_username
+       FROM messages m
+       JOIN users u ON m.sender_id = u.id
+       LEFT JOIN groups g ON m.group_id = g.id
+       LEFT JOIN users ru ON m.recipient_id = ru.id
+       ORDER BY m.created_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+    return result.rows;
+  }
+
+  static async findByIdWithDetails(id: number): Promise<MessageWithUser | null> {
+    const result = await pool.query(
+      `SELECT m.*, u.username as sender_username, u.email as sender_email,
+              g.name as group_name,
+              ru.username as recipient_username
+       FROM messages m
+       JOIN users u ON m.sender_id = u.id
+       LEFT JOIN groups g ON m.group_id = g.id
+       LEFT JOIN users ru ON m.recipient_id = ru.id
+       WHERE m.id = $1`,
+      [id]
+    );
+    return result.rows[0] || null;
   }
 }

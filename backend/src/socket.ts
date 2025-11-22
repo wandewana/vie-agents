@@ -28,6 +28,7 @@ interface Socket {
 export class SocketManager {
   private io: SocketIOServer;
   private userSockets: Map<number, string> = new Map();
+  private superadminSockets: Set<string> = new Set();
 
   constructor(server: HttpServer) {
     this.io = new SocketIOServer(server, {
@@ -65,6 +66,12 @@ export class SocketManager {
       // Store user's socket connection
       if (socket.user) {
         this.userSockets.set(socket.user.userId, socket.id);
+
+        // Track superadmin connections
+        if (socket.user.username === 'superadmin') {
+          this.superadminSockets.add(socket.id);
+          console.log(`Superadmin ${socket.user.username} connected for monitoring`);
+        }
       }
 
       // Join user to their personal room
@@ -132,6 +139,12 @@ export class SocketManager {
         console.log(`User ${socket.user?.username} disconnected`);
         if (socket.user) {
           this.userSockets.delete(socket.user.userId);
+
+          // Remove from superadmin tracking
+          if (socket.user.username === 'superadmin') {
+            this.superadminSockets.delete(socket.id);
+            console.log(`Superadmin ${socket.user.username} disconnected from monitoring`);
+          }
         }
       });
     });
@@ -152,5 +165,17 @@ export class SocketManager {
 
   public getIO(): SocketIOServer {
     return this.io;
+  }
+
+  // Method to emit events to all superadmin users
+  public emitToSuperadmin(event: string, data: any) {
+    this.superadminSockets.forEach(socketId => {
+      this.io.to(socketId).emit(event, data);
+    });
+  }
+
+  // Method to broadcast new message to superadmin for monitoring
+  public broadcastToSuperadmin(message: any) {
+    this.emitToSuperadmin('monitor_message', message);
   }
 }
