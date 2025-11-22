@@ -4,6 +4,8 @@ import { UserModel } from '../models/User';
 import { GroupModel } from '../models/Group';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { socketManager } from '../index';
+import { isAgent, SUPERADMIN_USERNAME, getAgentWorkspace } from '../config/agents';
+import { executeAgentTask, isAgentBusy } from '../services/agentExecutor';
 
 const router = express.Router();
 
@@ -21,6 +23,28 @@ router.post('/direct', authenticateToken, async (req: AuthenticatedRequest, res)
     const recipient = await UserModel.findById(recipient_id);
     if (!recipient) {
       return res.status(404).json({ error: 'Recipient not found' });
+    }
+
+    // Check if recipient is an agent and if sender is superadmin
+    const sender = await UserModel.findById(sender_id);
+    const isRecipientAgent = isAgent(recipient.username);
+    const isSenderSuperadmin = sender?.username === SUPERADMIN_USERNAME;
+
+    // If sending to an agent, check if agent has a workspace configured
+    if (isRecipientAgent && isSenderSuperadmin) {
+      const workspace = getAgentWorkspace(recipient.username);
+      if (!workspace) {
+        return res.status(400).json({
+          error: `Agent ${recipient.username} does not have a workspace configured`
+        });
+      }
+
+      // Check if agent is busy
+      if (isAgentBusy(recipient.username)) {
+        return res.status(409).json({
+          error: `${recipient.username} is currently busy with another task`
+        });
+      }
     }
 
     // Create message
@@ -45,6 +69,18 @@ router.post('/direct', authenticateToken, async (req: AuthenticatedRequest, res)
       if (messageWithDetails) {
         socketManager.broadcastToSuperadmin(messageWithDetails);
       }
+    }
+
+    // If message is from superadmin to an agent, trigger agent task
+    if (isRecipientAgent && isSenderSuperadmin) {
+      console.log(`Triggering agent task for ${recipient.username}`);
+      executeAgentTask({
+        agentUsername: recipient.username,
+        prompt: content,
+        superadminId: sender_id
+      }).catch(err => {
+        console.error(`Failed to execute agent task for ${recipient.username}:`, err);
+      });
     }
 
     res.status(201).json({
