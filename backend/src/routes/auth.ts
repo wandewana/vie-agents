@@ -8,16 +8,16 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, username } = req.body;
+    const { password, username } = req.body;
 
-    if (!email || !password || !username) {
-      return res.status(400).json({ error: 'Email, password, and username are required' });
+    if (!password || !username) {
+      return res.status(400).json({ error: 'Password and username are required' });
     }
 
     // Check if user already exists
-    const existingUser = await UserModel.findByEmail(email);
+    const existingUser = await UserModel.findByUsername(username);
     if (existingUser) {
-      return res.status(400).json({ error: 'User with this email already exists' });
+      return res.status(400).json({ error: 'User with this username already exists' });
     }
 
     // Hash password
@@ -25,7 +25,6 @@ router.post('/register', async (req, res) => {
 
     // Create user
     const user = await UserModel.create({
-      email,
       password: hashedPassword,
       username,
     });
@@ -33,7 +32,6 @@ router.post('/register', async (req, res) => {
     // Generate token
     const token = AuthUtils.generateToken({
       userId: user.id,
-      email: user.email,
       username: user.username,
     });
 
@@ -42,7 +40,6 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email,
         username: user.username,
       },
     });
@@ -55,14 +52,14 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
     }
 
     // Find user
-    const user = await UserModel.findByEmail(email);
+    const user = await UserModel.findByUsername(username);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -76,7 +73,6 @@ router.post('/login', async (req, res) => {
     // Generate token
     const token = AuthUtils.generateToken({
       userId: user.id,
-      email: user.email,
       username: user.username,
     });
 
@@ -85,7 +81,6 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email,
         username: user.username,
       },
     });
@@ -106,7 +101,6 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
     res.json({
       user: {
         id: user.id,
-        email: user.email,
         username: user.username,
         created_at: user.created_at,
       },

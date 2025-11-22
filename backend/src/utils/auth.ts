@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 
 export interface JwtPayload {
   userId: number;
-  email: string;
   username: string;
 }
 

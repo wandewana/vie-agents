@@ -263,7 +263,6 @@ router.get('/users/me', authenticateToken, async (req: AuthenticatedRequest, res
       data: {
         user: {
           id: user.id,
-          email: user.email,
           username: user.username,
           created_at: user.created_at,
         },

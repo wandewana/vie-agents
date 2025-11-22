@@ -93,7 +93,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       content: newMessage.trim(),
       sender_id: user?.id || 0,
       sender_username: user?.username || '',
-      sender_email: user?.email || '',
       recipient_id: conversation.type === 'direct' ? conversation.id : undefined,
       group_id: conversation.type === 'group' ? conversation.id : undefined,
       created_at: new Date().toISOString(),

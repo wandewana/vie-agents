@@ -70,7 +70,7 @@ export class GroupModel {
 
   static async getMembers(groupId: number): Promise<any[]> {
     const result = await pool.query(
-      `SELECT u.id, u.username, u.email, gm.joined_at
+      `SELECT u.id, u.username, gm.joined_at
        FROM group_members gm
        JOIN users u ON gm.user_id = u.id
        WHERE gm.group_id = $1

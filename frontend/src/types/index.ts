@@ -1,6 +1,5 @@
 export interface User {
   id: number;
-  email: string;
   username: string;
   created_at: string;
 }
@@ -22,7 +21,6 @@ export interface Message {
   group_id?: number;
   created_at: string;
   sender_username: string;
-  sender_email: string;
   is_optimistic?: boolean;
   group_name?: string;
   recipient_username?: string;
@@ -31,7 +29,6 @@ export interface Message {
 export interface Conversation {
   other_user_id: number;
   other_username: string;
-  other_email: string;
   last_message_at: string;
   type: 'direct' | 'group';
 }
@@ -39,8 +36,8 @@ export interface Conversation {
 export interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }

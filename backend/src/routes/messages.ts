@@ -128,7 +128,6 @@ router.get('/direct/:userId', authenticateToken, async (req: AuthenticatedReques
       otherUser: {
         id: otherUser.id,
         username: otherUser.username,
-        email: otherUser.email,
       },
     });
   } catch (error) {

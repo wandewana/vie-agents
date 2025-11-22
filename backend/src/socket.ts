@@ -8,7 +8,6 @@ import { GroupModel } from './models/Group';
 interface AuthenticatedSocket extends Socket {
   user?: {
     userId: number;
-    email: string;
     username: string;
   };
 }

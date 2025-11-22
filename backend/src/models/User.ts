@@ -2,7 +2,6 @@ import pool from '../database';
 
 export interface User {
   id: number;
-  email: string;
   password: string;
   username: string;
   created_at: Date;
@@ -10,23 +9,22 @@ export interface User {
 }
 
 export interface CreateUserData {
-  email: string;
   password: string;
   username: string;
 }
 
 export class UserModel {
   static async create(userData: CreateUserData): Promise<User> {
-    const { email, password, username } = userData;
+    const { password, username } = userData;
     const result = await pool.query(
-      'INSERT INTO users (email, password, username) VALUES ($1, $2, $3) RETURNING *',
-      [email, password, username]
+      'INSERT INTO users (password, username) VALUES ($1, $2) RETURNING *',
+      [password, username]
     );
     return result.rows[0];
   }
 
-  static async findByEmail(email: string): Promise<User | null> {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  static async findByUsername(username: string): Promise<User | null> {
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     return result.rows[0] || null;
   }
 
@@ -36,15 +34,15 @@ export class UserModel {
   }
 
   static async findAll(): Promise<User[]> {
-    const result = await pool.query('SELECT id, email, username, created_at FROM users ORDER BY username');
+    const result = await pool.query('SELECT id, username, created_at FROM users ORDER BY username');
     return result.rows;
   }
 
   static async searchUsers(query: string, excludeUserId?: number): Promise<User[]> {
     let sql = `
-      SELECT id, email, username, created_at
+      SELECT id, username, created_at
       FROM users
-      WHERE (username ILIKE $1 OR email ILIKE $1)
+      WHERE username ILIKE $1
     `;
     const params = [`%${query}%`];
 

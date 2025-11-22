@@ -18,7 +18,6 @@ export interface CreateMessageData {
 
 export interface MessageWithUser extends Message {
   sender_username: string;
-  sender_email: string;
   group_name?: string;
   recipient_username?: string;
 }
@@ -35,7 +34,7 @@ export class MessageModel {
 
   static async findById(id: number): Promise<MessageWithUser | null> {
     const result = await pool.query(
-      `SELECT m.*, u.username as sender_username, u.email as sender_email
+      `SELECT m.*, u.username as sender_username
        FROM messages m
        JOIN users u ON m.sender_id = u.id
        WHERE m.id = $1`,
@@ -46,7 +45,7 @@ export class MessageModel {
 
   static async getDirectMessages(user1Id: number, user2Id: number, limit = 50): Promise<MessageWithUser[]> {
     const result = await pool.query(
-      `SELECT m.*, u.username as sender_username, u.email as sender_email
+      `SELECT m.*, u.username as sender_username
        FROM messages m
        JOIN users u ON m.sender_id = u.id
        WHERE ((m.sender_id = $1 AND m.recipient_id = $2) OR
@@ -60,7 +59,7 @@ export class MessageModel {
 
   static async getGroupMessages(groupId: number, limit = 50): Promise<MessageWithUser[]> {
     const result = await pool.query(
-      `SELECT m.*, u.username as sender_username, u.email as sender_email
+      `SELECT m.*, u.username as sender_username
        FROM messages m
        JOIN users u ON m.sender_id = u.id
        WHERE m.group_id = $1
@@ -80,7 +79,6 @@ export class MessageModel {
            ELSE m.sender_id
          END as other_user_id,
          u.username as other_username,
-         u.email as other_email,
          MAX(m.created_at) as last_message_at,
          'direct' as type
        FROM messages m
@@ -92,7 +90,7 @@ export class MessageModel {
        )
        WHERE (m.sender_id = $1 OR m.recipient_id = $1)
          AND m.group_id IS NULL
-       GROUP BY other_user_id, u.username, u.email
+       GROUP BY other_user_id, u.username
        ORDER BY last_message_at DESC`,
       [userId]
     );
@@ -102,7 +100,7 @@ export class MessageModel {
       `SELECT
          g.id as other_user_id,
          g.name as other_username,
-         g.description as other_email,
+         g.description as group_description,
          MAX(m.created_at) as last_message_at,
          'group' as type
        FROM messages m
@@ -119,7 +117,7 @@ export class MessageModel {
 
   static async getAllMessages(limit = 100): Promise<MessageWithUser[]> {
     const result = await pool.query(
-      `SELECT m.*, u.username as sender_username, u.email as sender_email,
+      `SELECT m.*, u.username as sender_username,
               g.name as group_name,
               ru.username as recipient_username
        FROM messages m
@@ -135,7 +133,7 @@ export class MessageModel {
 
   static async findByIdWithDetails(id: number): Promise<MessageWithUser | null> {
     const result = await pool.query(
-      `SELECT m.*, u.username as sender_username, u.email as sender_email,
+      `SELECT m.*, u.username as sender_username,
               g.name as group_name,
               ru.username as recipient_username
        FROM messages m

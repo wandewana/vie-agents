@@ -22,13 +22,13 @@ api.interceptors.request.use((config) => {
 
 // Auth API
 export const authAPI = {
-  login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
+  login: async (username: string, password: string) => {
+    const response = await api.post('/auth/login', { username, password });
     return response.data;
   },
 
-  register: async (email: string, password: string, username: string) => {
-    const response = await api.post('/auth/register', { email, password, username });
+  register: async (username: string, password: string) => {
+    const response = await api.post('/auth/register', { username, password });
     return response.data;
   },
 

@@ -61,7 +61,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search users by name or email..."
+            placeholder="Search users by name..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -92,7 +92,6 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
                     <h3 className="text-sm font-medium text-gray-900">
                       {user.username}
                     </h3>
-                    <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                 </div>
                 <button
@@ -110,7 +109,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
               <Search size={32} className="mx-auto text-gray-300 mb-2" />
               <p className="text-gray-500 text-sm">No users found</p>
               <p className="text-gray-400 text-xs mt-1">
-                Try searching with a different name or email
+                Try searching with a different name
               </p>
             </div>
           </div>
@@ -120,7 +119,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
               <Search size={32} className="mx-auto text-gray-300 mb-2" />
               <p className="text-gray-500 text-sm">Search for users</p>
               <p className="text-gray-400 text-xs mt-1">
-                Enter a name or email to find users
+                Enter a name to find users
               </p>
             </div>
           </div>

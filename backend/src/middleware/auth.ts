@@ -4,7 +4,6 @@ import { AuthUtils } from '../utils/auth';
 export interface AuthenticatedRequest extends Request {
   user?: {
     userId: number;
-    email: string;
     username: string;
   };
 }

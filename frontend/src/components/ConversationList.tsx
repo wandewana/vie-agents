@@ -78,9 +78,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                   {conversation.other_username}
                 </h3>
                 <p className="text-xs text-gray-500 mt-1 truncate">
-                  {conversation.type === 'direct'
-                    ? conversation.other_email
-                    : conversation.other_email || 'Group chat'}
+                  {conversation.type === 'direct' ? 'Direct message' : 'Group chat'}
                 </p>
               </div>
             </div>
